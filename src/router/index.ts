@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import DashboardView from '@/components/dashboard/DashboardView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import RocketsAndLaunchesView from '@/views/RocketsAndLaunchesView.vue'
+import StarlinkView from '@/views/StarlinkView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -9,7 +10,17 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: DashboardView,
-    }
+    },
+    {
+      path: '/rockets-and-launches',
+      name: 'rockets-and-launches',
+      component: RocketsAndLaunchesView,
+    },
+    {
+      path: '/starlink',
+      name: 'starlink',
+      component: StarlinkView,
+    },
   ],
 })
 
