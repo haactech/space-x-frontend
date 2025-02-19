@@ -162,7 +162,7 @@
   const fetchDashboardData = async () => {
     try {
       const queryString = buildQueryString(filterStore.$state)
-      const url = `${process.env.VUE_APP_API_URL}/dashboard?${queryString}`
+      const url = `${import.meta.env.VUE_APP_API_URL}/dashboard?${queryString}`
       const response = await fetch(url)
       if (!response.ok) {
         throw new Error('Error al obtener datos del Dashboard')
