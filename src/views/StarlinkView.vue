@@ -125,7 +125,7 @@
         queryParams.set('starlink_version', starlinkVersion.value)
       }
 
-      const url = `${import.meta.env.VITE_API_URL}/dashboard?${queryParams.toString()}`
+      const url = `${import.meta.env.VITE_API_URL}/dashboard/?${queryParams.toString()}`
       const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener datos de Starlink')
       const data = await res.json()
