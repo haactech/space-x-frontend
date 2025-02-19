@@ -9,19 +9,19 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: DashboardView,
+      component: DashboardView
     },
     {
       path: '/rockets-and-launches',
       name: 'rockets-and-launches',
-      component: RocketsAndLaunchesView,
+      component: RocketsAndLaunchesView
     },
     {
       path: '/starlink',
       name: 'starlink',
-      component: StarlinkView,
-    },
-  ],
+      component: StarlinkView
+    }
+  ]
 })
 
 export default router
