@@ -185,7 +185,9 @@
 
   async function fetchRockets() {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/rockets`)
+      const url = `${import.meta.env.VITE_API_URL}/rockets`
+      console.log('Fetching rockets from:', url)
+      const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener Rockets')
       const data = await res.json()
       rocketsData.value = data
@@ -212,7 +214,7 @@
       }
 
       const url = `${import.meta.env.VITE_API_URL}/launches/?${queryParams.toString()}`
-
+      console.log('Fetching launches from:', url)
       const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener Launches')
       const data = await res.json()
