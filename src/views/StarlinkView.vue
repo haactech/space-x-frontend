@@ -1,6 +1,38 @@
 <template>
     <div class="starlink-container">
       <LoaderComponent v-if="isLoading" />
+
+      <div class="starlink-filters">
+          <h3>Filtros de Starlink</h3>
+
+          <label for="starlink-page">Página de Starlink:</label>
+          <input
+            type="number"
+            id="starlink-page"
+            v-model.number="starlinkPage"
+            min="1"
+          />
+
+          <label for="starlink-limit">Satélites por página:</label>
+          <input
+            type="number"
+            id="starlink-limit"
+            v-model.number="starlinkLimit"
+            min="1"
+            max="5000"
+          />
+
+          <label for="starlink-version">Versión (opcional):</label>
+          <input
+            type="text"
+            id="starlink-version"
+            v-model="starlinkVersion"
+            placeholder="Ej: v1.0"
+          />
+
+          <button @click="applyStarlinkFilters">Aplicar Filtros</button>
+      </div>
+
       <div class="charts-grid" v-if="starlinkData">
         <div class="chart-box">
           <div ref="versionChart" class="chart-container"></div>
@@ -47,23 +79,41 @@
 
   const { isLoading, withLoading } = useLoading()
   const starlinkData = ref(null)
+
+  //starlink filters
+  const starlinkPage = ref(1)
+  const starlinkLimit = ref(300)
+  const starlinkVersion = ref('')
   
   // Refs a contenedores de gráficas
   const versionChart = ref(null)
   const positionsChart = ref(null)
   const tooltip = ref(null)
   
-  // Fetch a tu endpoint principal que provee `starlink_data`
   async function fetchStarlinkDashboardData() {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/dashboard') // O la ruta real
+
+      const queryParams = new URLSearchParams({
+        starlink_page: starlinkPage.value,
+        starlink_limit: starlinkLimit.value,
+      })
+
+      if(starlinkVersion.value) {
+        queryParams.set('starlink_version', starlinkVersion.value)
+      }
+
+      const url = `http://localhost:8000/api/v1/dashboard?${queryParams.toString()}`
+      const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener datos de Starlink')
       const data = await res.json()
-      // Guardar la parte de starlink
       starlinkData.value = data.starlink_data
     } catch (error) {
       console.error(error)
     }
+  }
+
+  function applyStarlinkFilters() {
+    withLoading(fetchStarlinkDashboardData)
   }
   
   /* ------------------ Ejemplo: Chart 1 - Versions (Bar Chart) ------------------ */
@@ -75,14 +125,12 @@
     const orbits = starlinkData.value.orbital_parameters || []
     if (!orbits.length) return
   
-    // Add fallback dimensions
     const containerWidth = versionChart.value?.clientWidth || 600
     const containerHeight = versionChart.value?.clientHeight || 400
     const margin = { top: 30, right: 30, bottom: 50, left: 60 }
     const width = containerWidth - margin.left - margin.right
     const height = containerHeight - margin.top - margin.bottom
   
-    // SVG
     const svg = d3.select(versionChart.value)
       .append('svg')
       .attr('width', containerWidth)
@@ -91,19 +139,16 @@
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
   
-    // Escala X: version
     const x = d3.scaleBand()
       .domain(orbits.map(d => d.version))
       .range([0, width])
       .padding(0.2)
   
-    // Escala Y: count
     const y = d3.scaleLinear()
       .domain([0, d3.max(orbits, d => d.count)])
       .nice()
       .range([height, 0])
   
-    // Ejes
     g.append('g')
       .attr('transform', `translate(0, ${height})`)
       .call(d3.axisBottom(x))
@@ -111,7 +156,6 @@
     g.append('g')
       .call(d3.axisLeft(y))
   
-    // Barras
     g.selectAll('.bar')
       .data(orbits)
       .enter()
@@ -150,7 +194,6 @@
       .attr('height', d => height - y(d.count))
   }
   
-  /* ------------------ Ejemplo: Chart 2 - Satellite Positions (Scatter, simplificado) ------------------ */
   function drawPositionsChart() {
     if (!positionsChart.value || !starlinkData.value) return
   
@@ -159,7 +202,6 @@
     const sats = starlinkData.value.satellite_positions || []
     if (!sats.length) return
   
-    // Add fallback dimensions
     const containerWidth = positionsChart.value?.clientWidth || 600
     const containerHeight = positionsChart.value?.clientHeight || 400
     const margin = { top: 30, right: 30, bottom: 50, left: 60 }
@@ -174,17 +216,14 @@
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
   
-    // Escala X: longitud -180 a 180
     const x = d3.scaleLinear()
       .domain([-180, 180])
       .range([0, width])
   
-    // Escala Y: latitud -90 a 90
     const y = d3.scaleLinear()
       .domain([-90, 90])
       .range([height, 0])
   
-    // Ejes
     g.append('g')
       .attr('transform', `translate(0, ${height})`)
       .call(d3.axisBottom(x))
@@ -192,7 +231,6 @@
     g.append('g')
       .call(d3.axisLeft(y))
   
-    // Dibujamos círculos
     g.selectAll('.sat-dot')
       .data(sats)
       .enter()
@@ -250,7 +288,6 @@
     })
   })
   
-  // Update watch handler
   watch(starlinkData, async () => {
     await nextTick()
     drawAllCharts()
@@ -263,7 +300,7 @@
     flex-direction: column;
     gap: 2rem;
     padding: 1rem;
-    background-color: #121212; /* oscuro */
+    background-color: #121212;
     color: #eee;
     min-height: 100vh;
   }
@@ -288,7 +325,7 @@
     width: 100%;
     height: 100%;
     position: relative;
-    min-height: 400px; /* Explicit minimum height */
+    min-height: 400px; 
   }
   
   .starlink-table {
@@ -302,7 +339,6 @@
     border-bottom: 1px solid #333;
   }
   
-  /* Tooltip global */
   .tooltip {
     position: absolute;
     background-color: rgba(0,0,0,0.8);
