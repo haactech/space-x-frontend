@@ -20,6 +20,16 @@ export const useFilterStore = defineStore('filterStore', {
   actions: {
     setFilters(partialFilters: Partial<FiltersState>) {
       Object.assign(this, partialFilters)
+    },
+
+    initFilters() {
+      const storedFilters = localStorage.getItem('filterStore')
+      if (storedFilters) {
+        this.$patch(JSON.parse(storedFilters))
+      }
+      this.$subscribe((mutation, state) => {
+        localStorage.setItem('filterStore', JSON.stringify(state))
+      })
     }
   }
 })

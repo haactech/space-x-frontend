@@ -567,15 +567,33 @@
   }
 
   onMounted(async () => {
+    filterStore.initFilters()
     const { rocketId, startYear, endYear, limit, page } = route.query
+    const anyQueryParam = rocketId || startYear || endYear || limit || page
 
-    filterStore.setFilters({
-      rocketId: rocketId ? String(rocketId) : '',
-      startYear: startYear ? Number(startYear) : null,
-      endYear: endYear ? Number(endYear) : null,
-      limit: limit ? Number(limit) : 100,
-      page: page ? Number(page) : 1
-    })
+  if (anyQueryParam) {
+      filterStore.setFilters({
+        rocketId: rocketId ? String(rocketId) : '',
+        startYear: startYear ? Number(startYear) : null,
+        endYear: endYear ? Number(endYear) : null,
+        limit: limit ? Number(limit) : 100,
+        page: page ? Number(page) : 1
+      })
+    } else {
+
+      const { rocketId, startYear, endYear, limit, page } = filterStore.$state
+
+      router.replace({
+        path: route.path,
+        query: {
+          rocketId: rocketId || '',
+          startYear: startYear?.toString() || '',
+          endYear: endYear?.toString() || '',
+          limit: limit.toString(),
+          page: page.toString()
+        }
+      })
+    }
 
     await withLoading(fetchDashboardData)
 
