@@ -8,7 +8,7 @@
             Rocket ID
           </label>
           <input
-            v-model="filters.rocketId"
+            v-model="filterStore.rocketId"
             placeholder="F9, FH, etc."
             class="filter-input"
           />
@@ -21,7 +21,7 @@
           </label>
           <input
             type="number"
-            v-model="filters.startYear"
+            v-model="filterStore.startYear"
             placeholder="2018"
             min="2000"
             max="2030"
@@ -36,7 +36,7 @@
           </label>
           <input
             type="number"
-            v-model="filters.endYear"
+            v-model="filterStore.endYear"
             placeholder="2023"
             min="2000"
             max="2030"
@@ -51,7 +51,7 @@
           </label>
           <input
             type="number"
-            v-model="filters.limit"
+            v-model="filterStore.limit"
             min="1"
             max="200"
             class="filter-input"
@@ -65,17 +65,14 @@
           </label>
           <input
             type="number"
-            v-model="filters.page"
+            v-model="filterStore.page"
             min="1"
             class="filter-input"
           />
         </div>
 
         <div class="filter-group">
-          <button
-            @click="withLoading(fetchDashboardData)"
-            class="filter-button"
-          >
+          <button @click="withLoading(fetchDashboardData)" class="filter-button">
             Apply Filters
             <i class="icon-chevron-right"></i>
           </button>
@@ -130,21 +127,21 @@
 </template>
 
 <script setup>
-  import { ref, onMounted, watch, reactive } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import * as d3 from 'd3'
+  import { useRoute, useRouter } from 'vue-router'
   import LoaderComponent from '../components/LoaderComponent.vue'
   import { useLoading } from '../composables/useLoading'
+
+  import { useFilterStore } from '@/stores/filterStore'
 
   const dashboardData = ref(null)
   const { isLoading, withLoading } = useLoading()
 
-  const filters = reactive({
-    rocketId: '',
-    startYear: null,
-    endYear: null,
-    limit: 50,
-    page: 1
-  })
+  const filterStore = useFilterStore()
+
+  const route = useRoute()
+  const router = useRouter()
 
   const lineChart = ref(null)
   const barChart = ref(null)
@@ -154,20 +151,17 @@
 
   function buildQueryString(params) {
     const query = new URLSearchParams()
-
     if (params.rocketId) query.append('rocketId', params.rocketId)
-    if (params.startYear) query.append('startYear', params.startYear)
-    if (params.endYear) query.append('endYear', params.endYear)
-
-    query.append('limit', params.limit)
-    query.append('page', params.page)
-
+    if (params.startYear) query.append('startYear', params.startYear.toString())
+    if (params.endYear) query.append('endYear', params.endYear.toString())
+    query.append('limit', params.limit.toString())
+    query.append('page', params.page.toString())
     return query.toString()
-  }
+}
 
   const fetchDashboardData = async () => {
     try {
-      const queryString = buildQueryString(filters)
+      const queryString = buildQueryString(filterStore.$state)
       const url = `http://localhost:8000/api/v1/dashboard?${queryString}`
       const response = await fetch(url)
       if (!response.ok) {
@@ -566,21 +560,46 @@
         d3.select(this).attr('fill', '#ff9800')
         d3.select(tooltip.value).style('opacity', 0)
       })
-      // Animación de las barras
       .transition()
       .duration(800)
       .attr('y', d => y(d.count))
       .attr('height', d => height - y(d.count))
   }
 
-  // Montar y ver datos
   onMounted(async () => {
+    const { rocketId, startYear, endYear, limit, page } = route.query
+
+    filterStore.setFilters({
+      rocketId: rocketId ? String(rocketId) : '',
+      startYear: startYear ? Number(startYear) : null,
+      endYear: endYear ? Number(endYear) : null,
+      limit: limit ? Number(limit) : 100,
+      page: page ? Number(page) : 1
+    })
+
     await withLoading(fetchDashboardData)
+
     drawAllCharts()
 
-    // (Opcional) Redibujar al cambiar el tamaño de la ventana
     window.addEventListener('resize', drawAllCharts)
   })
+
+  watch(
+  () => filterStore.$state, 
+  newFilters => {
+    router.replace({
+      path: route.path,
+      query: {
+        rocketId: newFilters.rocketId || '',
+        startYear: newFilters.startYear?.toString() || '',
+        endYear: newFilters.endYear?.toString() || '',
+        limit: newFilters.limit.toString(),
+        page: newFilters.page.toString()
+      }
+    })
+  },
+  { deep: true }
+)
 
   watch(dashboardData, () => {
     drawAllCharts()
