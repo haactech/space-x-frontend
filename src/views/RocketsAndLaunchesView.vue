@@ -185,7 +185,7 @@
 
   async function fetchRockets() {
     try {
-      const url = `${import.meta.env.VITE_API_URL}/rockets`
+      const url = `https://api.hermesagc.com/api/v1/rockets/`
       console.log('Fetching rockets from:', url)
       const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener Rockets')
