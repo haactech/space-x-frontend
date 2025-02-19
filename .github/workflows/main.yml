@@ -33,7 +33,7 @@ jobs:
 
     - name: Build
       env:
-        VUE_APP_API_URL: ${{ secrets.VUE_APP_API_URL }}
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
       run: |
         npm run build
 
