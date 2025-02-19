@@ -100,8 +100,8 @@
   import { ref, onMounted, watch, nextTick } from 'vue'
   import { useLoading } from '../composables/useLoading'
   import * as d3 from 'd3'
-  import StarlinkMap from '../components/StarlinkMap.vue'
-  import LoaderComponent from '../components/LoaderComponent.vue'
+  import StarlinkMap from '@/components/StarlinkMap.vue'
+  import LoaderComponent from '@/components/LoaderComponent.vue'
 
   const { isLoading, withLoading } = useLoading()
   const starlinkData = ref(null)
