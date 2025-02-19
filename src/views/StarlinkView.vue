@@ -1,21 +1,16 @@
 <template>
     <div class="starlink-container">
-      <h1>Starlink Dashboard</h1>
   
-      <!-- Grilla de dos columnas, por ejemplo: Graf. de Versiones / Mapa (o scatter) -->
       <div class="charts-grid" v-if="starlinkData">
         <div class="chart-box">
-          <h2>Starlink Versions Overview</h2>
           <div ref="versionChart" class="chart-container"></div>
         </div>
   
         <div class="chart-box">
-          <h2>Satellite Positions</h2>
           <StarlinkMap :satelliteData="starlinkData.satellite_positions" />
         </div>
       </div>
   
-      <!-- Tabla opcional de satélites (versión, altura, etc.) -->
       <div v-if="starlinkData">
         <h2>Satellite List</h2>
         <table class="starlink-table">

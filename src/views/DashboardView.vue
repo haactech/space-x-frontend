@@ -1,6 +1,5 @@
 <template>
   <div class="dashboard-container">
-    <h1>SpaceX Dashboard Quadsci</h1>
 
     <div class="metrics-grid" v-if="dashboardData">
       <div class="metric-card">

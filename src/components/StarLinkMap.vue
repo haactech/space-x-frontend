@@ -37,122 +37,120 @@
   }
   
   function drawMap(geoData) {
-    // 1) Borrar todo previo
-    d3.select(mapContainer.value).selectAll('*').remove()
-  
-    // 2) Dimensiones
-    const containerWidth = mapContainer.value.clientWidth
-    const containerHeight = mapContainer.value.clientHeight
-  
-    const margin = { top: 10, right: 10, bottom: 10, left: 10 }
-    const width = containerWidth - margin.left - margin.right
-    const height = containerHeight - margin.top - margin.bottom
-  
-    // 3) SVG
-    const svg = d3.select(mapContainer.value)
-      .append('svg')
-      .attr('width', containerWidth)
-      .attr('height', containerHeight)
-      .style('background-color', '#f3f9ff') // "Océano"
-  
-    // 4) Proyección
-    const projection = d3.geoMercator()
-      .fitExtent([[margin.left, margin.top], [width, height]], geoData)
-  
-    const path = d3.geoPath().projection(projection)
-  
-    // 5) Grupo principal
-    const mainGroup = svg.append('g').attr('class', 'main-group')
-  
-    // 6) Paises
-    mainGroup.selectAll('path')
-      .data(geoData.features)
-      .enter()
-      .append('path')
-      .attr('d', path)
-      .attr('fill', '#e0e0e0')
-      .attr('stroke', '#b0b0b0')
-      .attr('stroke-width', 0.5)
-      .on('mouseover', function() {
-        d3.select(this).transition().duration(200)
-          .attr('fill', '#d4d4d4')
-      })
-      .on('mouseout', function() {
-        d3.select(this).transition().duration(200)
-          .attr('fill', '#e0e0e0')
-      })
-  
-    // 7) Grupo para satélites
-    const satGroup = mainGroup.append('g').attr('class', 'satellite-group')
-  
-    // 8) Satélites
-    satGroup.selectAll('.satellite')
-      .data(props.satelliteData)
-      .enter()
-      .append('circle')
-      .attr('class', 'satellite')
-      .attr('r', 5)
-      .attr('fill', '#ff5722')
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 0.5)
-      .attr('cx', d => {
-        const coords = projection([d.longitude, d.latitude])
-        return coords ? coords[0] : 0
-      })
-      .attr('cy', d => {
-        const coords = projection([d.longitude, d.latitude])
-        return coords ? coords[1] : 0
-      })
-      .on('mouseover', function(event, d) {
-        // Destacamos el círculo
-        d3.select(this)
-          .transition().duration(100)
-          .attr('fill', '#bf360c')
-          .attr('r', 7)
-  
-        // Armamos el texto
-        const infoHtml = `
-          <div class="tooltip-content">
-            <div><strong>ID:</strong> ${d.id}</div>
-            <div><strong>Lat:</strong> ${d.latitude.toFixed(2)}&deg;</div>
-            <div><strong>Lon:</strong> ${d.longitude.toFixed(2)}&deg;</div>
-            <div><strong>Altura:</strong> ${d.height_km.toFixed(2)} km</div>
-          </div>
-        `
-  
-        // Usamos clientX/clientY + offset para evitar que se recorte
-        d3.select(tooltip.value)
-          .style('opacity', 1)
-          .style('left', (event.clientX + 15) + 'px')
-          .style('top', (event.clientY + 15) + 'px')
-          .html(infoHtml)
-      })
-      .on('mousemove', function(event) {
-        // Seguimos el mouse
-        d3.select(tooltip.value)
-          .style('left', (event.clientX + 15) + 'px')
-          .style('top', (event.clientY + 15) + 'px')
-      })
-      .on('mouseout', function() {
-        // Restauramos el círculo
-        d3.select(this)
-          .transition().duration(100)
-          .attr('fill', '#ff5722')
-          .attr('r', 5)
-  
-        // Ocultamos el tooltip
-        d3.select(tooltip.value).style('opacity', 0)
-      })
-  
-    // 9) Zoom
-    const zoom = d3.zoom()
-      .scaleExtent([1, 8])
-      .on('zoom', (event) => {
-        mainGroup.attr('transform', event.transform)
-      })
-  
-    svg.call(zoom)
-  }
+  // 1) Borrar todo previo
+  d3.select(mapContainer.value).selectAll('*').remove()
+
+  // 2) Dimensiones
+  const containerWidth = mapContainer.value.clientWidth
+  const containerHeight = mapContainer.value.clientHeight
+
+  const margin = { top: 10, right: 10, bottom: 10, left: 10 }
+  const width = containerWidth - margin.left - margin.right
+  const height = containerHeight - margin.top - margin.bottom
+
+  // 3) SVG
+  // Cambia el color de fondo del SVG a un tono oscuro (ej: #121212 o #1e1e1e)
+  const svg = d3.select(mapContainer.value)
+    .append('svg')
+    .attr('width', containerWidth)
+    .attr('height', containerHeight)
+    .style('background-color', '#121212') // Fondo oscuro del "océano"
+
+  // 4) Proyección
+  const projection = d3.geoMercator()
+    .fitExtent([[margin.left, margin.top], [width, height]], geoData)
+
+  const path = d3.geoPath().projection(projection)
+
+  // 5) Grupo principal
+  const mainGroup = svg.append('g').attr('class', 'main-group')
+
+  // 6) Paises
+  // Ajusta colores de relleno y trazo para que destaquen sobre el fondo oscuro.
+  mainGroup.selectAll('path')
+    .data(geoData.features)
+    .enter()
+    .append('path')
+    .attr('d', path)
+    .attr('fill', '#2a2a2a')      // color gris oscuro para los países
+    .attr('stroke', '#444444')    // trazo un poco más claro
+    .attr('stroke-width', 0.5)
+    .on('mouseover', function() {
+      d3.select(this).transition().duration(200)
+        .attr('fill', '#404040')  // aclaramos un poco al pasar el ratón
+    })
+    .on('mouseout', function() {
+      d3.select(this).transition().duration(200)
+        .attr('fill', '#2a2a2a')
+    })
+
+  // 7) Grupo para satélites
+  const satGroup = mainGroup.append('g').attr('class', 'satellite-group')
+
+  // 8) Satélites
+  satGroup.selectAll('.satellite')
+    .data(props.satelliteData)
+    .enter()
+    .append('circle')
+    .attr('class', 'satellite')
+    .attr('r', 5)
+    .attr('fill', '#ff5722')  // naranja Starlink
+    .attr('stroke', '#fff')   // borde blanco
+    .attr('stroke-width', 0.5)
+    .attr('cx', d => {
+      const coords = projection([d.longitude, d.latitude])
+      return coords ? coords[0] : 0
+    })
+    .attr('cy', d => {
+      const coords = projection([d.longitude, d.latitude])
+      return coords ? coords[1] : 0
+    })
+    .on('mouseover', function(event, d) {
+      d3.select(this)
+        .transition().duration(100)
+        .attr('fill', '#bf360c')
+        .attr('r', 7)
+
+      // Tooltip
+      const infoHtml = `
+        <div class="tooltip-content">
+          <div><strong>ID:</strong> ${d.id}</div>
+          <div><strong>Lat:</strong> ${d.latitude.toFixed(2)}&deg;</div>
+          <div><strong>Lon:</strong> ${d.longitude.toFixed(2)}&deg;</div>
+          <div><strong>Altura:</strong> ${d.height_km.toFixed(2)} km</div>
+        </div>
+      `
+
+      d3.select(tooltip.value)
+        .style('opacity', 1)
+        .style('left', (event.clientX + 15) + 'px')
+        .style('top', (event.clientY + 15) + 'px')
+        .html(infoHtml)
+    })
+    .on('mousemove', function(event) {
+      d3.select(tooltip.value)
+        .style('left', (event.clientX + 15) + 'px')
+        .style('top', (event.clientY + 15) + 'px')
+    })
+    .on('mouseout', function() {
+      d3.select(this)
+        .transition().duration(100)
+        .attr('fill', '#ff5722')
+        .attr('r', 5)
+
+      d3.select(tooltip.value).style('opacity', 0)
+    })
+
+  // 9) Zoom
+  const zoom = d3.zoom()
+    .scaleExtent([1, 8])
+    .on('zoom', (event) => {
+      mainGroup.attr('transform', event.transform)
+    })
+
+  svg.call(zoom)
+}
+
   </script>
   
   <style scoped>
