@@ -1,6 +1,6 @@
 <template>
     <div class="starlink-container">
-  
+      <LoaderComponent v-if="isLoading" />
       <div class="charts-grid" v-if="starlinkData">
         <div class="chart-box">
           <div ref="versionChart" class="chart-container"></div>
@@ -40,9 +40,12 @@
   
   <script setup>
   import { ref, onMounted, watch, nextTick } from 'vue'
+  import { useLoading } from '../composables/useLoading'
   import * as d3 from 'd3'
   import StarlinkMap from '../components/StarlinkMap.vue'
+  import LoaderComponent from '../components/LoaderComponent.vue'
 
+  const { isLoading, withLoading } = useLoading()
   const starlinkData = ref(null)
   
   // Refs a contenedores de gráficas
@@ -231,7 +234,7 @@
   
   // Update mounting logic
   onMounted(async () => {
-    await fetchStarlinkDashboardData()
+    await withLoading(fetchStarlinkDashboardData)
     
     // Wait for DOM update
     await nextTick()

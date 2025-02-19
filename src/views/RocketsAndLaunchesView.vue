@@ -1,7 +1,6 @@
 <template>
     <div class="rockets-launches-container">
-      <h1>Rockets & Launches</h1>
-  
+        <LoaderComponent v-if = "isLoading"/>
       <!-- 1. Filtros o selecciones opcionales -->
       <div class="filter-section">
         <!-- Por si quieres un dropdown de rockets, rangos de fecha, etc. -->
@@ -80,30 +79,28 @@
   <script setup>
   import { ref, onMounted, watch } from 'vue'
   import * as d3 from 'd3'
+  import LoaderComponent from '../components/LoaderComponent.vue'
+  import { useLoading } from '@/composables/useLoading'
   
-  // Estado para rockets y launches
+  const { isLoading, withLoading } = useLoading()
   const rocketsData = ref(null)
   const launchesData = ref(null)
   
-  // Refs a contenedores de gráficas D3
   const rocketSpecsChart = ref(null)
   const launchesTimelineChart = ref(null)
   const tooltip = ref(null)
   
-  // 1. Función para hacer fetch de rockets
   async function fetchRockets() {
     try {
       const res = await fetch('http://localhost:8000/api/v1/rockets')
       if (!res.ok) throw new Error('Error al obtener Rockets')
       const data = await res.json()
-      // data es un array de rockets
       rocketsData.value = data
     } catch (error) {
       console.error(error)
     }
   }
   
-  // 2. Función para hacer fetch de launches
   async function fetchLaunches() {
     try {
       const res = await fetch('http://localhost:8000/api/v1/launches/')
@@ -120,18 +117,15 @@
     d3.select(rocketSpecsChart.value).selectAll('*').remove()
     if (!rocketsData.value || !rocketSpecsChart.value) return
   
-    // Por ejemplo, creamos un Bar Chart de rocket.name vs. rocket.mass.kg
-    // 1) Preparamos data
+
     const rockets = rocketsData.value // array de rockets
   
-    // 2) Tamaño del contenedor
     const containerWidth = rocketSpecsChart.value.clientWidth || 800
     const containerHeight = rocketSpecsChart.value.clientHeight || 400
     const margin = { top: 30, right: 30, bottom: 50, left: 70 }
     const width = containerWidth - margin.left - margin.right
     const height = containerHeight - margin.top - margin.bottom
   
-    // 3) SVG
     const svg = d3.select(rocketSpecsChart.value)
       .append('svg')
       .attr('width', containerWidth)
@@ -140,7 +134,6 @@
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
   
-    // 4) Escalas
     const x = d3.scaleBand()
       .domain(rockets.map(r => r.name))
       .range([0, width])
@@ -151,7 +144,6 @@
       .nice()
       .range([height, 0])
   
-    // 5) Ejes
     g.append('g')
       .attr('transform', `translate(0, ${height})`)
       .call(d3.axisBottom(x))
@@ -282,8 +274,8 @@
   }
   
   onMounted(async () => {
-    await fetchRockets()
-    await fetchLaunches()
+    await withLoading(fetchRockets)
+    await withLoading(fetchLaunches)
     drawAllCharts()
   
     window.addEventListener('resize', drawAllCharts)

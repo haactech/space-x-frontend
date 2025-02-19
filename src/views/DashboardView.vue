@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-
+    <LoaderComponent v-if="isLoading" />
     <div class="metrics-grid" v-if="dashboardData">
       <div class="metric-card">
         <h3>Total Launches</h3>
@@ -49,8 +49,11 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import * as d3 from 'd3'
+import LoaderComponent from '../components/LoaderComponent.vue'
+import { useLoading } from '../composables/useLoading'
 
 const dashboardData = ref(null)
+const { isLoading, withLoading } = useLoading()
 
 const lineChart = ref(null)
 const barChart = ref(null)
@@ -436,7 +439,7 @@ const drawStarlinkChart = () => {
 
 // Montar y ver datos
 onMounted(async () => {
-  await fetchDashboardData()
+  await withLoading(fetchDashboardData)
   drawAllCharts()
 
   // (Opcional) Redibujar al cambiar el tamaño de la ventana
