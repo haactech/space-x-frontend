@@ -11,7 +11,7 @@
   
         <div class="chart-box">
           <h2>Satellite Positions</h2>
-          <div ref="positionsChart" class="chart-container"></div>
+          <StarlinkMap :satelliteData="starlinkData.satellite_positions" />
         </div>
       </div>
   
@@ -46,7 +46,8 @@
   <script setup>
   import { ref, onMounted, watch, nextTick } from 'vue'
   import * as d3 from 'd3'
-  
+  import StarlinkMap from '../components/StarlinkMap.vue'
+
   const starlinkData = ref(null)
   
   // Refs a contenedores de gráficas
