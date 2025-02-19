@@ -1,28 +1,50 @@
 <template>
     <div class="rockets-launches-container">
         <LoaderComponent v-if = "isLoading"/>
-      <!-- 1. Filtros o selecciones opcionales -->
       <div class="filter-section">
-        <!-- Por si quieres un dropdown de rockets, rangos de fecha, etc. -->
-        <!-- <select v-model="selectedRocket"> ... </select> -->
+        <h3>Filtros de Launches</h3>
+          <label>
+            <input type="checkbox" v-model="onlyUpcoming" />
+            Solo Upcoming
+          </label>
+          <label>
+            <input type="checkbox" v-model="onlySuccess" />
+            Solo Exitosos
+          </label>
+
+          <label for="sort-select">Ordenar por:</label>
+          <select id="sort-select" v-model="sortField">
+            <option value="date_utc">Fecha</option>
+            <option value="flight_number">Flight Number</option>
+          </select>
+
+          <label for="order-select">Orden:</label>
+          <select id="order-select" v-model="sortOrder">
+            <option value="asc">Ascendente</option>
+            <option value="desc">Descendente</option>
+          </select>
+
+          <label for="page">Página:</label>
+          <input type="number" id="page" v-model.number="currentPage" min="1" />
+
+          <label for="limit">Items por página:</label>
+          <input type="number" id="limit" v-model.number="pageLimit" min="1" max="100" />
+
+        <button @click="applyLaunchFilters">Aplicar Filtros</button>
       </div>
   
-      <!-- 2. Grilla para las gráficas principales -->
       <div class="charts-grid" v-if="rocketsData && launchesData">
-        <!-- Ejemplo de un Bar Chart comparando Cost o Masa de cada rocket -->
         <div class="chart-box">
           <h2>Rocket Specifications</h2>
           <div ref="rocketSpecsChart" class="chart-container"></div>
         </div>
   
-        <!-- Ejemplo: Launches por Mes o por Año (se puede extraer de 'launchesData') -->
         <div class="chart-box">
           <h2>Launches Timeline</h2>
           <div ref="launchesTimelineChart" class="chart-container"></div>
         </div>
       </div>
   
-      <!-- 3. Tabla de detalles de rockets -->
       <div v-if="rocketsData">
         <h2>All Rockets</h2>
         <table class="rockets-table">
@@ -47,7 +69,6 @@
         </table>
       </div>
   
-      <!-- 4. Tabla o lista de Launches -->
       <div v-if="launchesData">
         <h2>All Launches</h2>
         <table class="launches-table">
@@ -71,7 +92,6 @@
         </table>
       </div>
   
-      <!-- Tooltip para D3 -->
       <div ref="tooltip" class="tooltip"></div>
     </div>
   </template>
@@ -86,6 +106,15 @@
   const rocketsData = ref(null)
   const launchesData = ref(null)
   
+  // filters and pagination
+  const onlyUpcoming = ref(false)
+  const onlySuccess = ref(false)
+  const sortField = ref('date_utc')
+  const sortOrder = ref('asc')
+  const currentPage = ref(1)
+  const pageLimit = ref(20)
+
+  //charts references 
   const rocketSpecsChart = ref(null)
   const launchesTimelineChart = ref(null)
   const tooltip = ref(null)
@@ -103,14 +132,34 @@
   
   async function fetchLaunches() {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/launches/')
+      const queryParams = new URLSearchParams({
+        page: currentPage.value,
+        limit: pageLimit.value,
+        sort: sortField.value,
+        order: sortOrder.value,
+      })
+
+      if(onlyUpcoming.value){
+        queryParams.set('upcoming', true)
+      }
+
+      if(onlySuccess.value){
+        queryParams.set('success', true)
+      }
+
+      const url = `http://localhost:8000/api/v1/launches/?${queryParams.toString()}`
+
+      const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener Launches')
       const data = await res.json()
-      // data.docs = array de lanzamientos
       launchesData.value = data
     } catch (error) {
       console.error(error)
     }
+  }
+
+  function applyLaunchFilters() {
+    withLoading(fetchLaunches)
   }
   
   function drawRocketSpecsChart() {
@@ -118,7 +167,7 @@
     if (!rocketsData.value || !rocketSpecsChart.value) return
   
 
-    const rockets = rocketsData.value // array de rockets
+    const rockets = rocketsData.value 
   
     const containerWidth = rocketSpecsChart.value.clientWidth || 800
     const containerHeight = rocketSpecsChart.value.clientHeight || 400

@@ -1,5 +1,24 @@
 <template>
   <div class="dashboard-container">
+    <div class="filters-panel">
+      <label>Rocket ID</label>
+      <input v-model="filters.rocketId" placeholder="F9, FH, etc." />
+
+      <label>Start Year</label>
+      <input type="number" v-model="filters.startYear" placeholder="2018" min="2000" max="2030" />
+
+      <label>End Year</label>
+      <input type="number" v-model="filters.endYear" placeholder="2023" min="2000" max="2030" />
+
+      <label>Limit</label>
+      <input type="number" v-model="filters.limit" min="1" max="200" />
+
+      <label>Page</label>
+      <input type="number" v-model="filters.page" min="1" />
+
+      <button @click="withLoading(fetchDashboardData)">Aplicar Filtros</button>
+    </div>
+
     <LoaderComponent v-if="isLoading" />
     <div class="metrics-grid" v-if="dashboardData">
       <div class="metric-card">
@@ -47,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive } from 'vue'
 import * as d3 from 'd3'
 import LoaderComponent from '../components/LoaderComponent.vue'
 import { useLoading } from '../composables/useLoading'
@@ -55,15 +74,38 @@ import { useLoading } from '../composables/useLoading'
 const dashboardData = ref(null)
 const { isLoading, withLoading } = useLoading()
 
+const filters = reactive({
+  rocketId: '',
+  startYear: null,
+  endYear: null,
+  limit: 50,
+  page: 1
+})
+
 const lineChart = ref(null)
 const barChart = ref(null)
 const donutChart = ref(null)
 const starlinkChart = ref(null)
 const tooltip = ref(null)
 
+function buildQueryString(params){
+  const query = new URLSearchParams()
+
+  if(params.rocketId) query.append('rocketId', params.rocketId)
+  if(params.startYear) query.append('startYear', params.startYear)
+  if(params.endYear) query.append('endYear', params.endYear)
+
+  query.append('limit', params.limit)
+  query.append('page', params.page)
+
+  return query.toString()
+}
+
 const fetchDashboardData = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/v1/dashboard')
+    const queryString = buildQueryString(filters)
+    const url = `http://localhost:8000/api/v1/dashboard?${queryString}`
+    const response = await fetch(url)
     if (!response.ok) {
       throw new Error('Error al obtener datos del Dashboard')
     }
