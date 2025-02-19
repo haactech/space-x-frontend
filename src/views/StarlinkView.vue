@@ -125,7 +125,7 @@
         queryParams.set('starlink_version', starlinkVersion.value)
       }
 
-      const url = `http://localhost:8000/api/v1/dashboard?${queryParams.toString()}`
+      const url = `${process.env.VUE_APP_API_URL}/dashboard?${queryParams.toString()}`
       const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener datos de Starlink')
       const data = await res.json()

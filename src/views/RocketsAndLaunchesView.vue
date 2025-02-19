@@ -185,7 +185,7 @@
 
   async function fetchRockets() {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/rockets')
+      const res = await fetch(`${process.env.VUE_APP_API_URL}/rockets`)
       if (!res.ok) throw new Error('Error al obtener Rockets')
       const data = await res.json()
       rocketsData.value = data
@@ -211,7 +211,7 @@
         queryParams.set('success', true)
       }
 
-      const url = `http://localhost:8000/api/v1/launches/?${queryParams.toString()}`
+      const url = `${process.env.VUE_APP_API_URL}/launches/?${queryParams.toString()}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error('Error al obtener Launches')
